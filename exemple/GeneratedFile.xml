@@ -1,0 +1,2 @@
+<?xml version="1.0"?>
+<ListBucketResult><Contents><Key>\ExemplePath\AnotherRandomFile.html</Key><ETag>"c7e26ba5d2be5220aeab9aa07b611bcc"</ETag><Size>235</Size></Contents><Contents><Key>\ExemplePath\RandomFile.txt</Key><ETag>"3dd535fe793a06b42b1e39c8c0afe355"</ETag><Size>402</Size></Contents></ListBucketResult>
