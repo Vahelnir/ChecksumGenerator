@@ -76,13 +76,13 @@ class ChecksumGenerator{
                     }else{
                         if($this->usedMethod == Self::AS_XML){
                             $f = $this->xml->addChild('Contents');
-                            $f->addChild('Key', str_replace('/', '\\', '\\'.$dir.$file));
+                            $f->addChild('Key', str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file));
                             $f->addChild('ETag', "\"".md5_file($dir.$file)."\"");
                             $f->addChild('Size', filesize($dir.$file));
                         }else if($this->usedMethod == Self::AS_JSON){
                             $json_array = array(
                                 'file' => array(
-                                    'path' => str_replace('/', '\\', '\\'.$dir.$file),
+                                    'path' => str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file),
                                     'md5'  => md5_file($dir.$file),
                                     'size' => filesize($dir.$file)
                                 ),
@@ -91,7 +91,7 @@ class ChecksumGenerator{
                         }else if($this->usedMethod == Self::AS_ARRAY){
                             $file_array = array(
                                 'file' => array(
-                                    'path' => str_replace('/', '\\', '\\'.$dir.$file),
+                                    'path' => str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file),
                                     'md5'  => md5_file($dir.$file),
                                     'size' => filesize($dir.$file)
                                 ),
