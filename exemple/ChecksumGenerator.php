@@ -79,14 +79,14 @@ class ChecksumGenerator{
                             $f->addChild('Key', str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file));
                             $f->addChild('ETag', "\"".md5_file($dir.$file)."\"");
                             $f->addChild('Size', filesize($dir.$file));
-                            $f->addChild('modifTime', filectime($dir.$file));
+                            $f->addChild('modifTime', filemtime ($dir.$file));
                         }else if($this->usedMethod == Self::AS_JSON){
                             $json_array = array(
                                 'file' => array(
                                     'path' => str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file),
                                     'md5'  => md5_file($dir.$file),
                                     'size' => filesize($dir.$file),
-                                    'modifTime' => filectime($dir.$file),
+                                    'modifTime' => filemtime ($dir.$file),
                                 ),
                             );
                             array_push($this->json, $json_array);
@@ -96,7 +96,7 @@ class ChecksumGenerator{
                                     'path' => str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file),
                                     'md5'  => md5_file($dir.$file),
                                     'size' => filesize($dir.$file),
-                                    'modifTime' => filectime($dir.$file),
+                                    'modifTime' => filemtime ($dir.$file),
                                 ),
                             );
                             array_push($this->array, $file_array);
