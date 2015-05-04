@@ -49,13 +49,13 @@ class ChecksumGenerator{
      */
     public function generate(){
         $firstCall = false;
-        if($this->usedMethod == Self::AS_XML && $this->xml == null){
+        if($this->usedMethod == self::AS_XML && $this->xml == null){
             $this->xml = new SimpleXMLElement('<ListBucketResult/>');
             $firstCall = true;
-        }else if($this->usedMethod == Self::AS_JSON && $this->json == null){
+        }else if($this->usedMethod == self::AS_JSON && $this->json == null){
             $json_array = array();
             $firstCall = true;
-        }else if($this->usedMethod == Self::AS_ARRAY && $this->array == null){
+        }else if($this->usedMethod == self::AS_ARRAY && $this->array == null){
             $file_array = array();
             $firstCall = true;
         }
@@ -74,29 +74,26 @@ class ChecksumGenerator{
                     if(filetype($dir.$file) == 'dir'){
                         $this->generate($dir.$file."/");
                     }else{
-                        if($this->usedMethod == Self::AS_XML){
+                        if($this->usedMethod == self::AS_XML){
                             $f = $this->xml->addChild('Contents');
                             $f->addChild('Key', str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file));
                             $f->addChild('ETag', "\"".md5_file($dir.$file)."\"");
                             $f->addChild('Size', filesize($dir.$file));
-                            $f->addChild('modifTime', filemtime ($dir.$file));
-                        }else if($this->usedMethod == Self::AS_JSON){
+                        }else if($this->usedMethod == self::AS_JSON){
                             $json_array = array(
                                 'file' => array(
                                     'path' => str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file),
                                     'md5'  => md5_file($dir.$file),
-                                    'size' => filesize($dir.$file),
-                                    'modifTime' => filemtime ($dir.$file),
+                                    'size' => filesize($dir.$file)
                                 ),
                             );
                             array_push($this->json, $json_array);
-                        }else if($this->usedMethod == Self::AS_ARRAY){
+                        }else if($this->usedMethod == self::AS_ARRAY){
                             $file_array = array(
                                 'file' => array(
                                     'path' => str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file),
                                     'md5'  => md5_file($dir.$file),
-                                    'size' => filesize($dir.$file),
-                                    'modifTime' => filemtime ($dir.$file),
+                                    'size' => filesize($dir.$file)
                                 ),
                             );
                             array_push($this->array, $file_array);
@@ -114,14 +111,14 @@ class ChecksumGenerator{
      * to the generating method used.
      */
     public function save(){
-        if($this->usedMethod == Self::AS_XML){
+        if($this->usedMethod == self::AS_XML){
             $this->xml->saveXML(__DIR__.DIRECTORY_SEPARATOR.$this->filename . ".xml");
             $this->xml = null;
-        }else if($this->usedMethod == Self::AS_JSON){
+        }else if($this->usedMethod == self::AS_JSON){
             $json = json_encode($this->json);
             file_put_contents(__DIR__.DIRECTORY_SEPARATOR.$this->filename.'.json', $json);
             $this->array = null;
-        }else if($this->usedMethod == Self::AS_ARRAY) {
+        }else if($this->usedMethod == self::AS_ARRAY) {
             echo "You can't use the save method for the <b>ARRAY</b> method";
             $this->array = null;
         }
@@ -133,18 +130,34 @@ class ChecksumGenerator{
      * @return mixed
      */
     public function get(){
-        if($this->usedMethod == Self::AS_XML){
+        if($this->usedMethod == self::AS_XML){
             $xml = $this->xml;
             $this->xml = null;
             return $xml;
-        }else if($this->usedMethod == Self::AS_JSON){
+        }else if($this->usedMethod == self::AS_JSON){
             $json = json_encode($this->json);
             $this->json = null;
             return $json;
-        }else if($this->usedMethod == Self::AS_ARRAY){
+        }else if($this->usedMethod == self::AS_ARRAY){
             $array = $this->array;
             $this->array = null;
             return $array;
         }
     }
+	
+	public function librariesDir($dir){
+		if(is_dir($dir)){
+			if ($dh = opendir($dir)){
+				while (($file = readdir($dh)) !== false){
+					if ($file === '.' || $file === '..') continue;
+					if(filetype($dir.$file) == 'dir'){
+						generate($dir.$file."/");
+					}else{
+						rename($dir.$file, __DIR__.$file);
+					}
+				}
+				closedir($dh);
+			}
+		}
+	}
 }

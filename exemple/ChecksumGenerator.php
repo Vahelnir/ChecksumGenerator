@@ -1,13 +1,16 @@
 <?php
 /**
- * @author Vavaballz
- * Class ChecksumGenerator
+ * Checksum Generator
+ *
+ * @copyright  Vavaballz
+ * @link       https://github.com/vavaballz/ChecksumGenerator
  */
 class ChecksumGenerator{
 
     private $dir;
     private $filename;
     private $usedMethod;
+    private $wantedFields = [];
 
     private $xml;
     private $json = array();
@@ -23,8 +26,20 @@ class ChecksumGenerator{
     }
 
     /**
+     * @param array $field contain the
+     * wanted fields
+     */
+    public function setFields($field = []){
+        if(!empty($field)){
+            $this->wantedFields = $field;
+        }else{
+            $this->wantedFields = ['path', 'size', 'md5', 'mtime'];
+        }
+    }
+
+    /**
      * Set the dir path
-     * @param $dir
+     * @param String $dir
      */
     public function setDir($dir){
         $this->dir = $dir;
@@ -32,12 +47,17 @@ class ChecksumGenerator{
 
     /**
      * Set the file name
-     * @param $filename
+     * @param String $filename
      */
     public function setFilename($filename){
         $this->filename = $filename;
     }
 
+    /**
+     * Set de wanted method
+     *
+     * @param integer $method
+     */
     public function setUsedMethod($method){
         $this->usedMethod = $method;
     }
@@ -76,29 +96,47 @@ class ChecksumGenerator{
                     }else{
                         if($this->usedMethod == Self::AS_XML){
                             $f = $this->xml->addChild('Contents');
-                            $f->addChild('Key', str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file));
-                            $f->addChild('ETag', "\"".md5_file($dir.$file)."\"");
-                            $f->addChild('Size', filesize($dir.$file));
-                            $f->addChild('modifTime', filemtime ($dir.$file));
+                            if(in_array("path", $this->wantedFields)){
+                                $f->addChild('Key', str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file));
+                            }
+                            if(in_array("size", $this->wantedFields)){
+                                $f->addChild('Size', filesize($dir.$file));
+                            }
+                            if(in_array("md5", $this->wantedFields)){
+                                $f->addChild('ETag', "\"".md5_file($dir.$file)."\"");
+                            }
+                            if(in_array("mtime", $this->wantedFields)){
+                                $f->addChild('Mtime', filemtime($dir.$file));
+                            }
                         }else if($this->usedMethod == Self::AS_JSON){
-                            $json_array = array(
-                                'file' => array(
-                                    'path' => str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file),
-                                    'md5'  => md5_file($dir.$file),
-                                    'size' => filesize($dir.$file),
-                                    'modifTime' => filemtime ($dir.$file),
-                                ),
-                            );
+                            $json_array = ['file' => []];
+                            if(in_array("path", $this->wantedFields)){
+                                $json_array['file']['path'] = str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file);
+                            }
+                            if(in_array("size", $this->wantedFields)){
+                                $json_array['file']['size'] = filesize($dir.$file);
+                            }
+                            if(in_array("md5", $this->wantedFields)){
+                                $json_array['file']['md5'] = md5_file($dir.$file);
+                            }
+                            if(in_array("mtime", $this->wantedFields)){
+                                $json_array['file']['mtime'] = filemtime($dir.$file);
+                            }
                             array_push($this->json, $json_array);
                         }else if($this->usedMethod == Self::AS_ARRAY){
-                            $file_array = array(
-                                'file' => array(
-                                    'path' => str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file),
-                                    'md5'  => md5_file($dir.$file),
-                                    'size' => filesize($dir.$file),
-                                    'modifTime' => filemtime ($dir.$file),
-                                ),
-                            );
+                            $file_array = ['file' => []];
+                            if(in_array("path", $this->wantedFields)){
+                                $file_array['file']['path'] = str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file);
+                            }
+                            if(in_array("size", $this->wantedFields)){
+                                $file_array['file']['size'] = filesize($dir.$file);
+                            }
+                            if(in_array("md5", $this->wantedFields)){
+                                $file_array['file']['md5'] = md5_file($dir.$file);
+                            }
+                            if(in_array("mtime", $this->wantedFields)){
+                                $file_array['file']['mtime'] = filemtime($dir.$file);
+                            }
                             array_push($this->array, $file_array);
                         }
                     }
@@ -130,7 +168,7 @@ class ChecksumGenerator{
     /**
      * Get the generated
      * into a var
-     * @return mixed
+     * @return mixed return a array, json or xml code
      */
     public function get(){
         if($this->usedMethod == Self::AS_XML){

@@ -11,6 +11,10 @@ $checksum->setDir("ExemplePath/");
 // The name of the generated file (Only for JSON and XML)
 $checksum->setFilename("GeneratedFile");
 
+// Select the wanted fields :
+// path, size, mtime and md5
+$checksum->setFields(['path', 'size', 'mtime', 'md5']);
+
 // The generating type (AS_XML for XML, AS_JSON for JSON, AS_ARRAY for an array)
 $checksum->setUsedMethod($checksum::AS_JSON);
 
