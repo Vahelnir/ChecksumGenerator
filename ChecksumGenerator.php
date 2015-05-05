@@ -42,6 +42,9 @@ class ChecksumGenerator{
      * @param String $dir
      */
     public function setDir($dir){
+        if(substr($dir, strlen($dir)-1, strlen($dir))){
+            $dir = $dir."/";
+        }
         $this->dir = $dir;
     }
 
