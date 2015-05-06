@@ -42,10 +42,10 @@ class ChecksumGenerator{
      * @param String $dir
      */
     public function setDir($dir){
-        if(substr($dir, strlen($dir)-1, strlen($dir)) == "/" && !empty($dir)){
-            $dir = substr($dir, 0, strlen($dir)-1);
+        if(substr($dir, strlen($dir)-1, strlen($dir))){
+            $dir = $dir."/";
         }
-        $this->dir = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $dir);
+        $this->dir = $dir;
     }
 
     /**
@@ -71,8 +71,16 @@ class ChecksumGenerator{
      * and size.
      */
     public function generate(){
+        $firstCall = false;
         if($this->usedMethod == self::AS_XML && $this->xml == null){
             $this->xml = new SimpleXMLElement('<ListBucketResult/>');
+            $firstCall = true;
+        }else if($this->usedMethod == self::AS_JSON && $this->json == null){
+            $json_array = array();
+            $firstCall = true;
+        }else if($this->usedMethod == self::AS_ARRAY && $this->array == null){
+            $file_array = array();
+            $firstCall = true;
         }
         $caller = debug_backtrace();
         if(isset($caller[1]) && func_get_args()){
@@ -84,65 +92,59 @@ class ChecksumGenerator{
 
         if(is_dir($dir)){
             if ($dh = opendir($dir)){
-                while( $file = readdir($dh) ) {
+                while (($file = readdir($dh)) !== false){
                     if ($file === '.' || $file === '..') continue;
-                    $this->generate($dir.DIRECTORY_SEPARATOR.$file);
+                    if(filetype($dir.$file) == 'dir'){
+                        $this->generate($dir.$file."/");
+                    }else{
+                        if($this->usedMethod == self::AS_XML){
+                            $f = $this->xml->addChild('Contents');
+                            if(in_array("path", $this->wantedFields)){
+                                $f->addChild('Key', str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file));
+                            }
+                            if(in_array("size", $this->wantedFields)){
+                                $f->addChild('Size', filesize($dir.$file));
+                            }
+                            if(in_array("md5", $this->wantedFields)){
+                                $f->addChild('ETag', "\"".md5_file($dir.$file)."\"");
+                            }
+                            if(in_array("mtime", $this->wantedFields)){
+                                $f->addChild('Mtime', filemtime($dir.$file));
+                            }
+                        }else if($this->usedMethod == self::AS_JSON){
+                            $json_array = ['file' => []];
+                            if(in_array("path", $this->wantedFields)){
+                                $json_array['file']['path'] = str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file);
+                            }
+                            if(in_array("size", $this->wantedFields)){
+                                $json_array['file']['size'] = filesize($dir.$file);
+                            }
+                            if(in_array("md5", $this->wantedFields)){
+                                $json_array['file']['md5'] = md5_file($dir.$file);
+                            }
+                            if(in_array("mtime", $this->wantedFields)){
+                                $json_array['file']['mtime'] = filemtime($dir.$file);
+                            }
+                            array_push($this->json, $json_array);
+                        }else if($this->usedMethod == self::AS_ARRAY){
+                            $file_array = ['file' => []];
+                            if(in_array("path", $this->wantedFields)){
+                                $file_array['file']['path'] = str_replace('/', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.$dir.$file);
+                            }
+                            if(in_array("size", $this->wantedFields)){
+                                $file_array['file']['size'] = filesize($dir.$file);
+                            }
+                            if(in_array("md5", $this->wantedFields)){
+                                $file_array['file']['md5'] = md5_file($dir.$file);
+                            }
+                            if(in_array("mtime", $this->wantedFields)){
+                                $file_array['file']['mtime'] = filemtime($dir.$file);
+                            }
+                            array_push($this->array, $file_array);
+                        }
+                    }
                 }
                 closedir($dh);
-            }
-        }else{
-            if(file_exists($dir)){
-
-                $fdir = str_replace($_SERVER['DOCUMENT_ROOT']."/", "", $dir);
-                $fdir = str_replace("..".DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, $fdir);
-
-                if($this->usedMethod == self::AS_XML){
-                    $f = $this->xml->addChild('Contents');
-                    if(in_array("path", $this->wantedFields)){
-                        $f->addChild('Key', str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $fdir));
-                    }
-                    if(in_array("size", $this->wantedFields)){
-                        $f->addChild('Size', filesize($dir));
-                    }
-                    if(in_array("md5", $this->wantedFields)){
-                        $f->addChild('ETag', "\"".md5_file($dir)."\"");
-                    }
-                    if(in_array("mtime", $this->wantedFields)){
-                        $f->addChild('Mtime', filemtime($dir));
-                    }
-                }else if($this->usedMethod == self::AS_JSON){
-                    $json_array = ['file' => []];
-                    if(in_array("path", $this->wantedFields)){
-                        $json_array['file']['path'] = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $fdir);
-                    }
-                    if(in_array("size", $this->wantedFields)){
-                        $json_array['file']['size'] = filesize($dir);
-                    }
-                    if(in_array("md5", $this->wantedFields)){
-                        $json_array['file']['md5'] = md5_file($dir);
-                    }
-                    if(in_array("mtime", $this->wantedFields)){
-                        $json_array['file']['mtime'] = filemtime($dir);
-                    }
-                    array_push($this->json, $json_array);
-                }else if($this->usedMethod == self::AS_ARRAY){
-                    $file_array = ['file' => []];
-                    if(in_array("path", $this->wantedFields)){
-                        $file_array['file']['path'] = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $dir);
-                    }
-                    if(in_array("size", $this->wantedFields)){
-                        $file_array['file']['size'] = filesize($dir);
-                    }
-                    if(in_array("md5", $this->wantedFields)){
-                        $file_array['file']['md5'] = md5_file($dir);
-                    }
-                    if(in_array("mtime", $this->wantedFields)){
-                        $file_array['file']['mtime'] = filemtime($dir);
-                    }
-                    array_push($this->array, $file_array);
-                }
-            }else{
-                echo "Unknow directory";
             }
         }
     }
